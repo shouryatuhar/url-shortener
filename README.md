@@ -4,8 +4,8 @@
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-smolurl-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://url-shortener-blush-one.vercel.app)
 [![Node.js](https://img.shields.io/badge/Node.js-24.x-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech)
-[![License](https://img.shields.io/badge/License-ISC-blue?style=for-the-badge)](LICENSE)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)]
+
 
 ---
 

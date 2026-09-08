@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/shorten",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/:code/stats",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/:code",
+      "destination": "/api/index.js"
+    }
+  ]
+}

@@ -162,7 +162,10 @@
             </div>
             <div class="meta-row">
               <span class="meta-label">Clicks:</span>
-              <span class="meta-value" id="result-clicks">0</span>
+              <span class="meta-value" style="display: flex; align-items: center; gap: 6px;">
+                <span class="click-pill" id="result-clicks-pill">👁 <strong id="result-clicks">0</strong></span>
+                <button type="button" id="refresh-active-btn" class="action-icon-btn" title="Refresh clicks count">↻</button>
+              </span>
             </div>
             <div class="meta-row" id="result-expires-row" style="display: none;">
               <span class="meta-label">Expires:</span>

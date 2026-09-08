@@ -120,8 +120,14 @@ router.get('/:code', async (req, res) => {
       [code]
     );
 
+    // Disable caching on redirects so every click is tracked
+    res.set({
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    });
+
     // The actual redirect — sends the browser to the original long URL
-    // 302 = temporary redirect (so it's NOT cached, meaning we track every visit)
     res.redirect(302, url.long_url);
 
   } catch (err) {

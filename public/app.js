@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultExpires = document.getElementById('result-expires');
   const resultQrBox = document.getElementById('result-qr-box');
   const downloadQrBtn = document.getElementById('download-qr-btn');
+  const refreshActiveBtn = document.getElementById('refresh-active-btn');
 
   // Table Elements
   const linksTableBody = document.getElementById('links-table-body');
@@ -50,6 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let activeModalUrl = '';
   let activeModalCode = '';
   let toastTimer = null;
+  let currentActiveCode = null;
+  let livePollTimer = null;
 
   // Initialize display
   const host = window.location.host;
@@ -165,7 +168,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // --------------------------------------------------------------------------
   function displayResult(data) {
     const origin = window.location.origin;
-    const fullShortUrl = `${origin}/${data.short_code}`;
+    const code = data.short_code || data.shortCode;
+    const fullShortUrl = `${origin}/${code}`;
+    currentActiveCode = code;
 
     shortUrlLink.textContent = fullShortUrl;
     shortUrlLink.href = fullShortUrl;
@@ -195,7 +200,73 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reveal card
     resultCard.style.display = 'block';
     resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Start live auto-polling for clicks on this active link
+    if (livePollTimer) clearInterval(livePollTimer);
+    livePollTimer = setInterval(refreshActiveStats, 2000);
   }
+
+  async function refreshActiveStats() {
+    if (!currentActiveCode) return;
+    try {
+      const res = await fetch(`/${currentActiveCode}/stats`);
+      if (res.ok) {
+        const stats = await res.json();
+        resultClicks.textContent = stats.clicks ?? 0;
+        // Also update matching item in history
+        const match = history.find(i => (i.short_code || i.shortCode) === currentActiveCode);
+        if (match && match.clicks !== stats.clicks) {
+          match.clicks = stats.clicks;
+          try { localStorage.setItem('smolurl_history', JSON.stringify(history)); } catch {}
+          renderHistoryTable();
+        }
+      }
+    } catch {}
+  }
+
+  async function refreshHistoryStatsQuietly() {
+    if (history.length === 0) return;
+    await Promise.all(history.map(async (item, idx) => {
+      const code = item.short_code || item.shortCode;
+      try {
+        const res = await fetch(`/${code}/stats`);
+        if (res.ok) {
+          const stats = await res.json();
+          history[idx].clicks = stats.clicks;
+        }
+      } catch {}
+    }));
+    try { localStorage.setItem('smolurl_history', JSON.stringify(history)); } catch {}
+    renderHistoryTable();
+  }
+
+  // Auto-refresh stats when visiting link or returning to window
+  visitBtn.addEventListener('click', () => {
+    const val = parseInt(resultClicks.textContent, 10) || 0;
+    resultClicks.textContent = val + 1;
+    setTimeout(refreshActiveStats, 1000);
+    setTimeout(refreshActiveStats, 2500);
+    setTimeout(refreshHistoryStatsQuietly, 1500);
+  });
+
+  refreshActiveBtn?.addEventListener('click', async () => {
+    refreshActiveBtn.style.transform = 'rotate(180deg)';
+    await refreshActiveStats();
+    setTimeout(() => { refreshActiveBtn.style.transform = 'none'; }, 300);
+    showToast('Clicks updated!', '✓');
+  });
+
+  window.addEventListener('focus', () => {
+    refreshActiveStats();
+    refreshHistoryStatsQuietly();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      refreshActiveStats();
+      refreshHistoryStatsQuietly();
+    }
+  });
 
   // --------------------------------------------------------------------------
   // Copy to Clipboard

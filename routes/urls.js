@@ -58,10 +58,44 @@ router.post('/shorten', async (req, res) => {
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
+
+router.get('/:code/stats', async (req, res) => {
+  const { code } = req.params;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM urls WHERE short_code = $1',
+      [code]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Short URL not found' });
+    }
+
+    const url = result.rows[0];
+
+    
+    res.json({
+      shortCode: url.short_code,
+      longUrl: url.long_url,
+      createdAt: url.created_at,
+      expiresAt: url.expires_at,
+      clicks: url.clicks,
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
 router.get('/:code', async (req, res) => {
   // req.params.code grabs whatever was in the URL where ":code" is
   // e.g. visiting /5UL3rS2 makes req.params.code === "5UL3rS2"
   const { code } = req.params;
+
+  if (code === 'favicon.ico') {
+    return res.status(204).end();
+  }
 
   try {
     const result = await pool.query(

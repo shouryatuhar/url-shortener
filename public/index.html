@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>smolurl — minimalist link shortener</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%3E<text y=%2226%22 font-size=%2226%22>🤏</text></svg>">
+</head>
+<body>
+
+  <!-- Top Notion Workspace Bar -->
+  <header class="top-bar">
+    <div class="breadcrumbs">
+      <span class="breadcrumb-item">Workspace</span>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-item">Tools</span>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-active"><span>🤏</span> smolurl</span>
+    </div>
+    <div class="top-actions">
+      <div class="status-indicator">
+        <span class="status-dot"></span>
+        <span>Online</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Page Content -->
+  <main class="main-container">
+    
+    <!-- Page Header -->
+    <section class="page-header">
+      <div class="page-icon">🤏</div>
+      <h1 class="page-title">smolurl</h1>
+      <p class="page-subtitle">A minimalist link shortener with click stats & instant QR codes.</p>
+    </section>
+
+    <!-- Notion Callout Box -->
+    <aside class="notion-callout">
+      <div class="callout-icon">💡</div>
+      <div class="callout-text">
+        <strong>Fast, clean, and distraction-free.</strong>
+        <span>Paste any long URL below to generate a compact link. Optionally assign a custom alias or set an expiration date.</span>
+      </div>
+    </aside>
+
+    <!-- Shortener Form Card -->
+    <section class="notion-card">
+      <form id="shorten-form">
+        
+        <!-- Long URL Input -->
+        <div class="form-group">
+          <label for="long-url" class="input-label">
+            <span>Destination URL</span>
+            <span id="url-validation-msg" style="color: var(--badge-red-text); font-size: 11px;"></span>
+          </label>
+          <div class="input-wrapper">
+            <input 
+              type="url" 
+              id="long-url" 
+              name="longUrl" 
+              class="text-input" 
+              placeholder="https://very-long-url.com/something/long?ref=project" 
+              required
+              autocomplete="off"
+            />
+            <button type="button" id="paste-btn" class="paste-btn" title="Paste from clipboard">Paste</button>
+          </div>
+        </div>
+
+        <!-- Notion Toggle: Optional Properties -->
+        <details class="notion-toggle" id="toggle-options">
+          <summary class="toggle-summary">
+            <span class="toggle-arrow">▸</span>
+            <span>Additional properties (custom alias & expiration)</span>
+          </summary>
+          <div class="toggle-content">
+            
+            <!-- Custom Alias -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="custom-alias" class="input-label">
+                <span>Custom Alias</span>
+              </label>
+              <div class="prefix-input-wrapper">
+                <span class="input-prefix" id="origin-prefix">/</span>
+                <input 
+                  type="text" 
+                  id="custom-alias" 
+                  name="customAlias" 
+                  placeholder="my-cool-link" 
+                  maxlength="40"
+                  autocomplete="off"
+                />
+              </div>
+            </div>
+
+            <!-- Expiration Date -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="expires-at" class="input-label">
+                <span>Expires at</span>
+              </label>
+              <input 
+                type="datetime-local" 
+                id="expires-at" 
+                name="expiresAt" 
+                class="text-input"
+              />
+            </div>
+
+          </div>
+        </details>
+
+        <!-- Form Footer / Submit -->
+        <div class="form-footer">
+          <div class="shortcut-hint">
+            <span>Press</span>
+            <span class="kbd">⌘</span>
+            <span class="kbd">↵</span>
+            <span>to shorten</span>
+          </div>
+          <button type="submit" id="submit-btn" class="btn-primary">
+            <span>Shorten link</span>
+            <span>→</span>
+          </button>
+        </div>
+
+      </form>
+    </section>
+
+    <!-- Result Card -->
+    <section id="result-card" class="result-card">
+      <div class="result-header">
+        <div class="result-title">
+          <span>✨</span>
+          <span>Your smol URL is ready</span>
+        </div>
+        <span class="result-badge badge-active" id="result-status">Active</span>
+      </div>
+
+      <div class="result-body">
+        <div class="result-main">
+          
+          <div class="short-url-box">
+            <a href="#" id="short-url-link" target="_blank" rel="noopener noreferrer" class="short-url-text"></a>
+            <div class="url-actions">
+              <button type="button" id="copy-btn" class="btn-secondary" title="Copy to clipboard">
+                <span id="copy-icon">📋</span>
+                <span id="copy-text">Copy</span>
+              </button>
+              <a href="#" id="visit-btn" target="_blank" rel="noopener noreferrer" class="btn-secondary" title="Open link">
+                <span>↗</span>
+                <span>Visit</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="result-meta">
+            <div class="meta-row">
+              <span class="meta-label">Original:</span>
+              <span class="meta-value" id="result-long-url"></span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Clicks:</span>
+              <span class="meta-value" id="result-clicks">0</span>
+            </div>
+            <div class="meta-row" id="result-expires-row" style="display: none;">
+              <span class="meta-label">Expires:</span>
+              <span class="meta-value" id="result-expires"></span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Inline QR Code Box -->
+        <div class="qr-container">
+          <div id="result-qr-box" class="qr-box"></div>
+          <button type="button" id="download-qr-btn" class="btn-qr-download">
+            <span>⬇</span>
+            <span>Download QR</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent Links Section (Notion Database View) -->
+    <section class="database-section">
+      <div class="database-header">
+        <div class="database-title">
+          <span>📋</span>
+          <span>Recent links</span>
+          <span class="database-count" id="links-count">0</span>
+        </div>
+        <div class="database-actions">
+          <button type="button" id="refresh-stats-btn" class="btn-text" title="Refresh clicks">
+            <span>↻</span>
+            <span>Refresh stats</span>
+          </button>
+          <button type="button" id="clear-history-btn" class="btn-text" title="Clear local list">
+            <span>Clear</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="notion-table">
+          <thead>
+            <tr>
+              <th style="width: 28%;">
+                <div class="th-content"><span>#</span><span>Short link</span></div>
+              </th>
+              <th style="width: 42%;">
+                <div class="th-content"><span>↗</span><span>Destination</span></div>
+              </th>
+              <th style="width: 12%;">
+                <div class="th-content"><span>👁</span><span>Clicks</span></div>
+              </th>
+              <th style="width: 18%; text-align: right;">
+                <div class="th-content" style="justify-content: flex-end;"><span>⚡️</span><span>Actions</span></div>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="links-table-body">
+            <tr>
+              <td colspan="4">
+                <div class="empty-state">
+                  <span class="empty-state-icon">📭</span>
+                  <span>No shortened links yet. Create your first smol link above!</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Quick QR Code Modal -->
+  <div id="qr-modal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-title">QR Code</div>
+      <div class="modal-sub" id="modal-qr-url"></div>
+      <div id="modal-qr-container" class="modal-qr-box"></div>
+      <div class="modal-actions">
+        <button type="button" id="modal-download-btn" class="btn-primary" style="padding: 6px 12px; font-size: 13px;">Download</button>
+        <button type="button" id="modal-close-btn" class="btn-secondary" style="padding: 6px 12px; font-size: 13px;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container">
+    <div id="toast" class="toast">
+      <span id="toast-icon" class="toast-icon">✓</span>
+      <span id="toast-message">Copied to clipboard</span>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <span>smolurl · minimalist & tracker-free URL shortener</span>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="/vendor/qrcode.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
